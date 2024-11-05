@@ -1,10 +1,12 @@
 // src/GameRoom.js
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 const GameRoom = ({ onJoinRoom, socket }) => {
+  const navigate = useNavigate();
   const { roomId } = useParams();
   const [players, setPlayers] = useState([]);
+  const [leaveRoom, setLeaveRoom] = useState(false);
 
   useEffect(() => {
     // Automatically join the room when the component mounts
@@ -26,6 +28,17 @@ const GameRoom = ({ onJoinRoom, socket }) => {
     };
   }, []);
 
+  useEffect(() => {
+    if (leaveRoom) {
+      socket.emit("leaveGame", roomId, socket.id);
+      navigate("/");
+    }
+  }, [leaveRoom, navigate]);
+
+  function handleLeaveGame() {
+    setLeaveRoom(true);
+  }
+
   return (
     <div>
       <h1>Room ID: {roomId}</h1>
@@ -35,6 +48,7 @@ const GameRoom = ({ onJoinRoom, socket }) => {
           <li key={playerId}>{playerId}</li>
         ))}
       </ul>
+      <button onClick={() => handleLeaveGame()}>Leave Game</button>
     </div>
   );
 };

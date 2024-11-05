@@ -38,6 +38,16 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("leaveGame", (roomId, playerId) => {
+    console.log("Player leaving game");
+
+    const index = rooms[roomId].players.indexOf(playerId);
+    if (index !== -1) {
+      rooms[roomId].players.splice(index, 1); // Remove the player from the room
+      io.to(roomId).emit("updatePlayers", rooms[roomId].players); // Notify remaining players
+    }
+  });
+
   socket.on("disconnect", (reason) => {
     console.log("Disconnect reason: ", reason);
     for (const roomId in rooms) {
