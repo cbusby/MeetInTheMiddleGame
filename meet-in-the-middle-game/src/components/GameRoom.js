@@ -26,14 +26,25 @@ const GameRoom = ({ onJoinRoom, socket }) => {
       console.log("socket off");
       socket.off("updatePlayers", updatePlayersHandler); // Clean up the specific listener
     };
-  }, []);
+  }, [socket]);
 
   useEffect(() => {
     if (leaveRoom) {
       socket.emit("leaveGame", roomId, socket.id);
-      navigate("/");
+
+      // Listen for acknowledgment from the server
+      const leaveGameAckHandler = () => {
+        navigate("/");
+      };
+
+      socket.on("leaveGameAck", leaveGameAckHandler);
+
+      // Cleanup the listener
+      return () => {
+        socket.off("leaveGameAck", leaveGameAckHandler);
+      };
     }
-  }, [leaveRoom, navigate]);
+  }, [leaveRoom, navigate, roomId, socket]);
 
   function handleLeaveGame() {
     setLeaveRoom(true);
@@ -48,7 +59,7 @@ const GameRoom = ({ onJoinRoom, socket }) => {
           <li key={playerId}>{playerId}</li>
         ))}
       </ul>
-      <button onClick={() => handleLeaveGame()}>Leave Game</button>
+      <button onClick={handleLeaveGame}>Leave Game</button>
     </div>
   );
 };
