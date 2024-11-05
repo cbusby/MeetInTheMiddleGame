@@ -5,6 +5,9 @@ const PORT = process.env.PORT || 4000;
 
 const app = express();
 const server = http.createServer(app);
+const cors = require("cors");
+
+app.use(cors());
 
 const io = socketIo(server, {
   cors: {
@@ -15,8 +18,6 @@ const io = socketIo(server, {
 const rooms = {};
 
 io.on("connection", (socket) => {
-  console.log("client connected: ", socket.id);
-
   socket.on("createRoom", (roomId) => {
     rooms[roomId] = { players: [] };
     socket.join(roomId);
@@ -25,10 +26,12 @@ io.on("connection", (socket) => {
   });
 
   socket.on("joinRoom", (roomId) => {
-    if (rooms[roomId]) {
+    console.log("Room id: ", roomId);
+    if (rooms[roomId] && !rooms[roomId].players.includes(socket.id)) {
       rooms[roomId].players.push(socket.id);
+      console.log(rooms[roomId]);
       socket.join(roomId);
-      io.to(roomId).emit("playerJoined", socket.id); // Notify all clients in the room
+      console.log("sending updatePlayers with ", rooms[roomId].players);
       io.to(roomId).emit("updatePlayers", rooms[roomId].players);
     } else {
       socket.emit("roomNotFound");
@@ -36,7 +39,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", (reason) => {
-    console.log(reason);
+    console.log("Disconnect reason: ", reason);
     for (const roomId in rooms) {
       const index = rooms[roomId].players.indexOf(socket.id);
       if (index !== -1) {

@@ -9,9 +9,9 @@ const socket = io("http://localhost:4000");
 
 function App() {
   const [roomId, setRoomId] = useState("");
-  const [playerJoined, setPlayerJoined] = useState(false);
 
   const createRoom = (id) => {
+    console.log("Create room with id: ", id);
     socket.emit("createRoom", id);
   };
 
@@ -20,17 +20,13 @@ function App() {
       setRoomId(id);
     });
 
-    socket.on("playerJoined", (id) => {
-      setPlayerJoined(true);
-    });
-
     return () => {
       socket.off("roomCreated");
-      socket.off("playerJoined");
     };
   }, []);
 
   const joinRoom = (roomId) => {
+    console.log("Someone joined room", roomId);
     socket.emit("joinRoom", roomId);
   };
 
@@ -44,11 +40,7 @@ function App() {
         <Route
           path="/room/:roomId"
           element={
-            <GameRoom
-              roomId={roomId}
-              onJoinRoom={joinRoom}
-              playerJoined={playerJoined}
-            />
+            <GameRoom roomId={roomId} onJoinRoom={joinRoom} socket={socket} />
           }
         />
       </Routes>

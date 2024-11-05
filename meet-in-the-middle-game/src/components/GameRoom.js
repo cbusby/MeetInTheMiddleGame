@@ -1,9 +1,8 @@
 // src/GameRoom.js
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { io } from "socket.io-client";
 
-const GameRoom = ({ onJoinRoom, playerJoined }) => {
+const GameRoom = ({ onJoinRoom, socket }) => {
   const { roomId } = useParams();
   const [players, setPlayers] = useState([]);
 
@@ -14,14 +13,16 @@ const GameRoom = ({ onJoinRoom, playerJoined }) => {
 
   // Listen for updates to the player list
   useEffect(() => {
-    const socket = io("http://localhost:4000");
-
-    socket.on("updatePlayers", (playerList) => {
+    const updatePlayersHandler = (playerList) => {
+      console.log("Received player list:", playerList);
       setPlayers(playerList); // Update the state with the new player list
-    });
+    };
+
+    socket.on("updatePlayers", updatePlayersHandler);
 
     return () => {
-      socket.disconnect(); // Clean up the socket connection
+      console.log("socket off");
+      socket.off("updatePlayers", updatePlayersHandler); // Clean up the specific listener
     };
   }, []);
 
